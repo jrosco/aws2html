@@ -1,0 +1,58 @@
+<head>
+
+<style>
+div.sub {
+    background-color:black;
+    color:white;
+    margin:20px;
+    padding:20px;
+    font-family: 'Tangerine';
+} 
+
+div.tags {
+    background-color:grey;
+    color:black;
+    margin:20px;
+    padding:20px;
+    font-family: 'Tangerine';
+} 
+
+/* unvisited link */
+a:link {
+    color: #FF0000;
+}
+
+/* visited link */
+a:visited {
+    color: #FF0000;
+}
+
+/* mouse over link */
+a:hover {
+    color: #FF0000;
+}
+
+/* selected link */
+a:active {
+    color: #FF0000;
+}
+
+</style>
+
+<script type="text/javascript">>
+function search_query(query) {
+    window.alert(query)
+}
+</script>
+
+</head>
+
+<div align='center'>
+
+<form action=search_query(document.getElementById('query')>
+Search:<br>
+<input type="text" id="query">
+<br>
+</form>
+
+</div>
