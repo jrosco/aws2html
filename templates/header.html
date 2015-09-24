@@ -1,58 +1,54 @@
 <head>
 
-<style>
-div.sub {
-    background-color:black;
-    color:white;
-    margin:20px;
-    padding:20px;
-    font-family: 'Tangerine';
-} 
+<script type="text/javascript">
+//Ref: https://blog.codecentric.de/en/2013/11/javascript-search-text-html-page/
+function search() {
+ 
+   var name = document.getElementById("searchForm").elements["searchItem"].value;
+   var pattern = name.toLowerCase();
+   console.log("Search Pattern : " + pattern);
+   var targetId = "";
+ 
+   var divs = document.getElementsByClassName("table");
+   
+   console.log("Div's Len : " + divs.length);
 
-div.tags {
-    background-color:grey;
-    color:black;
-    margin:20px;
-    padding:20px;
-    font-family: 'Tangerine';
-} 
+   for (var i = 0; i < divs.length; i++) {
 
-/* unvisited link */
-a:link {
-    color: #FF0000;
-}
-
-/* visited link */
-a:visited {
-    color: #FF0000;
-}
-
-/* mouse over link */
-a:hover {
-    color: #FF0000;
-}
-
-/* selected link */
-a:active {
-    color: #FF0000;
-}
-
-</style>
-
-<script type="text/javascript">>
-function search_query(query) {
-    window.alert(query)
+      var para = divs[i].getElementsByTagName("searchable");
+      console.log(para)
+      var index = para[0].innerText.toLowerCase().indexOf(pattern);
+      
+      console.log("Index : " + index);
+      
+      if (index != -1) {
+         console.log("Found : "+ para[i].innerText);
+         targetId = divs[i].parentNode.id;
+         console.log("TargetID: " + targetId)
+         document.getElementById(targetId).scrollIntoView();
+         break;
+      }
+   }  
 }
 </script>
 
 </head>
+<body>
+<a href="https://github.com/jrosco/aws2html"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
 
 <div align='center'>
-
-<form action=search_query(document.getElementById('query')>
-Search:<br>
-<input type="text" id="query">
-<br>
+<form id="searchForm" action="javascript:search();">
+   <div class="input-group">
+      <input type="text" id="searchItem" class="form-control" placeholder="Search" autofocus>
+      <button id="go" type="button" 
+              onclick="document.getElementById('searchForm').submit(); return false;">
+      </button>
+   </div>
 </form>
-
 </div>
+<hr>
+</body>
+
+
+
+
