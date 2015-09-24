@@ -38,12 +38,14 @@ def template_engine(ec2_stuff=None, rds_stuff=None):
         src = Template(html_file.read())
         ec2_id = ec2_stuff[0]['InstanceId']
         launch_time = ec2_stuff[0]['LaunchTime']
-        running = ec2_stuff[0]['State']['Name']
+        state = ec2_stuff[0]['State']['Name']
         dns_name = ec2_stuff[0]['PrivateDnsName']
         ami_id = ec2_stuff[0]['ImageId']
         instance_type = ec2_stuff[0]['InstanceType']
+        private_key = ec2_stuff[0]['KeyName']
         vpc_id = ec2_stuff[0]['VpcId']
-        sec_grp = '' #ec2_stuff[0]['GroupId']
+        iam_id = ec2_stuff[0]['IamInstanceProfile']['Id']
+        sec_grp = ec2_stuff[0]['SecurityGroups'][0]['GroupId']
         ip_address = ec2_stuff[0]['PrivateIpAddress']       
         tags = ec2_stuff[0]['Tags']
 
@@ -51,8 +53,9 @@ def template_engine(ec2_stuff=None, rds_stuff=None):
 
         #tag = map(lambda x: ('<br>' + x['Key'].encode('utf-8'), x['Value'].encode('utf-8')), tags)
 
-        d = {'ec2_id': ec2_id, 'launch_time': launch_time, 'list': tag, 'ami_id': ami_id, 'dns_name': dns_name,
-             'instance_type': instance_type, 'running': running, 'vpc_id': vpc_id, 'sec_grp': sec_grp, 'ip_address': ip_address}
+        d = {'ec2_id': ec2_id, 'launch_time': launch_time, 'list': tag, 'state': state, 'dns_name': dns_name,
+             'instance_type': instance_type, 'private_key': private_key, 'ami_id': ami_id, 'vpc_id': vpc_id, 
+             'sec_grp': sec_grp, 'iam_id': iam_id, 'ip_address': ip_address}
         result = src.substitute(d)
 
         with open(__output_html, 'a') as body:
@@ -68,7 +71,6 @@ def tableizer(dict_list):
 
     for x in dict_list:
         tag_table.append('%s => %s <br>' % (x['Key'].encode('utf-8'), x['Value'].encode('utf-8')))
-        print(tag_table)
     return ''.join(tag_table)
 
 
