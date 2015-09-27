@@ -22,7 +22,7 @@ div.tags {
 
 /* unvisited link */
 a:link {
-    color: #FF0000;
+    color: #000000;
 }
 
 /* visited link */
@@ -161,7 +161,7 @@ body {
 
     <div class="row">
       <div class="cell">
-        <searchable>$ec2_id</searchable>
+        <a href="https://$default_region.console.aws.amazon.com/ec2/v2/home?region=$default_region#Instances:instanceId=$ec2_id" target=_blank><searchable>$ec2_id</searchable></a>
       </div>
       <div class="cell">
         <searchable>$instance_type</searchable>

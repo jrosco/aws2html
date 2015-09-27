@@ -8,20 +8,35 @@ from __future__ import print_function
 
 import sys
 import os
+from os.path import expanduser
 import tempfile
 import json
 from string import Template
 import webbrowser
+import ConfigParser
+import urllib
 
 __html_template = 'templates/aws_template.html'
 __html_header = 'templates/header.html'
 __html_footer = 'templates/footer.html'
 __output_html = tempfile.mkstemp(dir='/tmp/', prefix='AWS-HTML-', suffix='.html')[1]
 
+try:
+    config = ConfigParser.ConfigParser()
+    config.readfp(open(expanduser('~') + '/.aws/config'))
+    default_region = config.get('default', 'region')
+    aws_search_link = 'https://'+default_region+'.console.aws.amazon.com/ec2/v2/home?region='+default_region+'#Instances:search='
+except Exception, e:
+    print(e)
+
+class Bunch(object):
+  def __init__(self, adict):
+    self.__dict__.update(adict)
+    
 # HTML Wrapper
 def build_html(obj):
     def ec2_wrapper(output):
-        template_engine(ec2_stuff=output)
+        template_engine(ec2_obj=output)
 
     return ec2_wrapper
 
@@ -32,30 +47,28 @@ def build_ec2(*args, **kwargs):
 
 
 # Template Engine
-def template_engine(ec2_stuff=None, rds_stuff=None):
+def template_engine(ec2_obj=object, rds_obj=None):
     try:
         html_file = open(__html_template)
         src = Template(html_file.read())
-        ec2_id = ec2_stuff[0]['InstanceId']
-        launch_time = ec2_stuff[0]['LaunchTime']
-        state = ec2_stuff[0]['State']['Name']
-        dns_name = ec2_stuff[0]['PrivateDnsName']
-        ami_id = ec2_stuff[0]['ImageId']
-        instance_type = ec2_stuff[0]['InstanceType']
-        private_key = ec2_stuff[0]['KeyName']
-        vpc_id = ec2_stuff[0]['VpcId']
-        iam_id = ec2_stuff[0]['IamInstanceProfile']['Id']
-        sec_grp = ec2_stuff[0]['SecurityGroups'][0]['GroupId']
-        ip_address = ec2_stuff[0]['PrivateIpAddress']       
-        tags = ec2_stuff[0]['Tags']
-
+        ec2_id = ec2_obj.InstanceId 
+        launch_time = ec2_obj.LaunchTime 
+        state = ec2_obj.State['Name']
+        dns_name = ec2_obj.PrivateDnsName 
+        ami_id = ec2_obj.ImageId 
+        instance_type = ec2_obj.InstanceType 
+        private_key = ec2_obj.KeyName 
+        vpc_id = ec2_obj.KeyName 
+        iam_id = '' #ec2_obj.IamInstanceProfile
+        sec_grp = ec2_obj.SecurityGroups[0]['GroupId'] 
+        ip_address = ec2_obj.PrivateIpAddress 
+        tags = ec2_obj.Tags
+	
         tag = tableizer(tags)
-
-        #tag = map(lambda x: ('<br>' + x['Key'].encode('utf-8'), x['Value'].encode('utf-8')), tags)
-
+     
         d = {'ec2_id': ec2_id, 'launch_time': launch_time, 'list': tag, 'state': state, 'dns_name': dns_name,
              'instance_type': instance_type, 'private_key': private_key, 'ami_id': ami_id, 'vpc_id': vpc_id, 
-             'sec_grp': sec_grp, 'iam_id': iam_id, 'ip_address': ip_address}
+             'sec_grp': sec_grp, 'iam_id': iam_id, 'ip_address': ip_address, 'default_region': default_region}
         result = src.substitute(d)
 
         with open(__output_html, 'a') as body:
@@ -70,7 +83,8 @@ def tableizer(dict_list):
     tag_table = []
 
     for x in dict_list:
-        tag_table.append('%s => %s <br>' % (x['Key'].encode('utf-8'), x['Value'].encode('utf-8')))
+        tag_table.append('%s => <a href=%s%s target=_blank>%s</a> <br>' % (x['Key'].encode('utf-8'),  aws_search_link, 
+            urllib.quote(x['Value'].encode('utf-8')), x['Value'].encode('utf-8')))
     return ''.join(tag_table)
 
 
@@ -101,7 +115,8 @@ def main():
             for x in range(len(j)):
                 try:
                     value = j[x]['Instances']
-                    build_ec2(output=value)
+                    dict_obj = Bunch(value[0])
+                    build_ec2(output=dict_obj)
                 except Exception, e:
                     print(e)
         header_footer(source_type='footer')
