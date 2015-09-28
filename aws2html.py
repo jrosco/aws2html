@@ -59,16 +59,16 @@ def template_engine(ec2_obj=object, rds_obj=None):
         instance_type = ec2_obj.InstanceType 
         private_key = ec2_obj.KeyName 
         vpc_id = ec2_obj.KeyName 
-        iam_id = '' #ec2_obj.IamInstanceProfile
+        region = ec2_obj.Placement['AvailabilityZone']
         sec_grp = ec2_obj.SecurityGroups[0]['GroupId'] 
         ip_address = ec2_obj.PrivateIpAddress 
         tags = ec2_obj.Tags
 	
         tag = tableizer(tags)
-     
+
         d = {'ec2_id': ec2_id, 'launch_time': launch_time, 'list': tag, 'state': state, 'dns_name': dns_name,
-             'instance_type': instance_type, 'private_key': private_key, 'ami_id': ami_id, 'vpc_id': vpc_id, 
-             'sec_grp': sec_grp, 'iam_id': iam_id, 'ip_address': ip_address, 'default_region': default_region}
+             'instance_type': instance_type, 'private_key': private_key, 'region': region, 'vpc_id': vpc_id, 
+             'sec_grp': sec_grp, 'ami_id': ami_id, 'ip_address': ip_address, 'default_region': default_region}
         result = src.substitute(d)
 
         with open(__output_html, 'a') as body:
@@ -85,6 +85,7 @@ def tableizer(dict_list):
     for x in dict_list:
         tag_table.append('%s => <a href=%s%s target=_blank>%s</a> <br>' % (x['Key'].encode('utf-8'),  aws_search_link, 
             urllib.quote(x['Value'].encode('utf-8')), x['Value'].encode('utf-8')))
+    tag_table.sort()
     return ''.join(tag_table)
 
 
