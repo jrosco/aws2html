@@ -25,7 +25,7 @@ try:
     config = ConfigParser.ConfigParser()
     config.readfp(open(expanduser('~') + '/.aws/config'))
     default_region = config.get('default', 'region')
-    aws_search_link = 'https://'+default_region+'.console.aws.amazon.com/ec2/v2/home?region='+default_region+'#Instances:search='
+    aws_search_link = 'https://'+default_region+'.console.aws.amazon.com/ec2/v2/home?region='+default_region+'#Instances:tag:'
 except Exception, e:
     print(e)
 
@@ -83,7 +83,7 @@ def tableizer(dict_list):
     tag_table = []
 
     for x in dict_list:
-        tag_table.append('%s => <a href=%s%s target=_blank>%s</a> <br>' % (x['Key'].encode('utf-8'),  aws_search_link, 
+        tag_table.append('%s => <a href=%s%s=%s target=_blank>%s</a> <br>' % (x['Key'].encode('utf-8'), aws_search_link, x['Key'].encode('utf-8'),
             urllib.quote(x['Value'].encode('utf-8')), x['Value'].encode('utf-8')))
     tag_table.sort()
     return ''.join(tag_table)
