@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 '''
-Example : aws ec2 describe-instances --filters Name=tag-value,Values="*prod*"  | aws2html.py
+Example :
+aws ec2 describe-instances --filters Name=tag-value,Values="*prod*" | aws2html.py
 
 '''
 from __future__ import print_function
@@ -16,6 +17,11 @@ import webbrowser
 import ConfigParser
 import urllib
 
+#AWS resource types
+EC2 = 'EC2'
+RDS = 'RDS'
+ELB = 'ELB'
+
 __html_template = 'templates/aws_template.html'
 __html_header = 'templates/header.html'
 __html_footer = 'templates/footer.html'
@@ -25,49 +31,56 @@ try:
     config = ConfigParser.ConfigParser()
     config.readfp(open(expanduser('~') + '/.aws/config'))
     default_region = config.get('default', 'region')
-    aws_search_link = 'https://'+default_region+'.console.aws.amazon.com/ec2/v2/home?region='+default_region+'#Instances:tag:'
+    aws_search_link = 'https://%s.console.aws.amazon.com/ec2/v2/home?region=%s#Instances:tag:' \
+                        % (default_region, default_region)
 except Exception, e:
     print(e)
 
 class Bunch(object):
   def __init__(self, adict):
     self.__dict__.update(adict)
-    
+
 # HTML Wrapper
-def build_html(obj):
-    def ec2_wrapper(output):
-        template_engine(ec2_obj=output)
-
-    return ec2_wrapper
-
+def build_html(func):
+    def wrapper(aws_resource):
+        if func.__name__ is "build_ec2":
+            template_engine(ec2_obj=aws_resource)
+        elif func.__name__ is "build_rds":
+            template_engine(rds_obj=aws_resource)
+        else:
+            return False
+    return wrapper
 
 @build_html
 def build_ec2(*args, **kwargs):
     return
 
+@build_html
+def build_rds(*args, **kwargs):
+    return
 
 # Template Engine
-def template_engine(ec2_obj=object, rds_obj=None):
+def template_engine(ec2_obj=object, rds_obj=object):
     try:
         html_file = open(__html_template)
         src = Template(html_file.read())
-        ec2_id = ec2_obj.InstanceId 
-        launch_time = ec2_obj.LaunchTime 
+        ec2_id = ec2_obj.InstanceId
+        launch_time = ec2_obj.LaunchTime
         state = ec2_obj.State['Name']
-        dns_name = ec2_obj.PrivateDnsName 
-        ami_id = ec2_obj.ImageId 
-        instance_type = ec2_obj.InstanceType 
-        private_key = ec2_obj.KeyName 
-        vpc_id = ec2_obj.KeyName 
+        dns_name = ec2_obj.PrivateDnsName
+        ami_id = ec2_obj.ImageId
+        instance_type = ec2_obj.InstanceType
+        private_key = ec2_obj.KeyName
+        vpc_id = ec2_obj.KeyName
         region = ec2_obj.Placement['AvailabilityZone']
-        sec_grp = ec2_obj.SecurityGroups[0]['GroupId'] 
-        ip_address = ec2_obj.PrivateIpAddress 
+        sec_grp = ec2_obj.SecurityGroups[0]['GroupId']
+        ip_address = ec2_obj.PrivateIpAddress
         tags = ec2_obj.Tags
-	
+
         tag = tableizer(tags)
 
         d = {'ec2_id': ec2_id, 'launch_time': launch_time, 'list': tag, 'state': state, 'dns_name': dns_name,
-             'instance_type': instance_type, 'private_key': private_key, 'region': region, 'vpc_id': vpc_id, 
+             'instance_type': instance_type, 'private_key': private_key, 'region': region, 'vpc_id': vpc_id,
              'sec_grp': sec_grp, 'ami_id': ami_id, 'ip_address': ip_address, 'default_region': default_region}
         result = src.substitute(d)
 
@@ -105,19 +118,32 @@ def header_footer(source_type=None):
         print('Incorrect source type given')
         sys.exit(1)
 
-
 # Main run
 def main():
+    __aws_resource = None
+    __json_uid = None
     try:
         json_output = sys.stdin.read()
         aws_dict = json.loads(json_output)
+        if 'Reservations' in aws_dict.keys():
+            __json_uid = 'Instances'
+            __aws_resource = EC2
+        elif 'DBInstances' in aws_dict.keys():
+            __aws_resource = RDS
+            __json_uid = 'DBInstanceIdentifier'
+        elif 'LoadBalancerDescriptions' in aws_dict.keys():
+            __aws_resource = ELB
+
         header_footer(source_type='header')
         for j in aws_dict.itervalues():
             for x in range(len(j)):
                 try:
-                    value = j[x]['Instances']
+                    value = j[x][__json_uid]
                     dict_obj = Bunch(value[0])
-                    build_ec2(output=dict_obj)
+                    if __aws_resource is EC2:
+                        build_ec2(aws_resource=dict_obj)
+                    if __aws_resource is RDS:
+                        build_rds(aws_resource=dict_obj)
                 except Exception, e:
                     print(e)
         header_footer(source_type='footer')
@@ -136,5 +162,3 @@ def main_test():
 
 if '__main__' == __name__:
     main()
-
-
