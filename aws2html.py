@@ -40,6 +40,14 @@ class Bunch(object):
   def __init__(self, adict):
     self.__dict__.update(adict)
 
+def help_menu():
+    print('Usage Examples:\n'
+        'with filters:\n '
+        'aws ec2 describe-instances --filters Name=tag-value,Values="*prod*" | aws2html.py '
+        '\nwithout filters\n '
+        'aws ec2 describe-instances | aws2html.py ')
+    sys.exit(0)
+
 # HTML Wrapper
 def build_html(func):
     def wrapper(aws_resource):
@@ -123,6 +131,8 @@ def main():
     __aws_resource = None
     __json_uid = None
     try:
+        if len(sys.argv) > 1:
+            help_menu()
         json_output = sys.stdin.read()
         aws_dict = json.loads(json_output)
         if 'Reservations' in aws_dict.keys():
