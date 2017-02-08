@@ -17,13 +17,20 @@ import webbrowser
 import ConfigParser
 import urllib
 from os.path import expanduser
+import argparse
+
+parser = argparse.ArgumentParser(prog='\nwith filters:\n '
+    'aws ec2 describe-instances --filters Name=tag-value,Values="*prod*" | aws2html '
+    '\nwithout filters\n '
+    'aws ec2 describe-instances | aws2html')
+args = parser.parse_args()
 
 #AWS resource types
 EC2 = 'EC2'
 RDS = 'RDS'
 ELB = 'ELB'
 
-__user_home = expanduser("~")
+__user_home = expanduser("~/")
 __html_template = __user_home + '.aws2html/aws_template.html'
 __html_header = __user_home + '.aws2html/header.html'
 __html_footer = __user_home + '.aws2html/footer.html'
@@ -31,24 +38,16 @@ __output_html = tempfile.mkstemp(dir='/tmp/', prefix='AWS-HTML-', suffix='.html'
 
 try:
     config = ConfigParser.ConfigParser()
-    config.readfp(open(expanduser('~') + '/.aws/config'))
+    config.readfp(open(__user_home + '.aws/config'))
     default_region = config.get('default', 'region')
     aws_search_link = 'https://%s.console.aws.amazon.com/ec2/v2/home?region=%s#Instances:tag:' \
                         % (default_region, default_region)
-except Exception, e:
-    print(e)
+except (ConfigParser.Error, Exception) as err:
+    print(err)
 
 class Bunch(object):
   def __init__(self, adict):
     self.__dict__.update(adict)
-
-def help_menu():
-    print('Usage Examples:\n'
-        'with filters:\n '
-        'aws ec2 describe-instances --filters Name=tag-value,Values="*prod*" | aws2html.py '
-        '\nwithout filters\n '
-        'aws ec2 describe-instances | aws2html.py ')
-    sys.exit(0)
 
 # HTML Wrapper
 def build_html(func):
@@ -96,7 +95,7 @@ def template_engine(ec2_obj=object, rds_obj=object):
 
         with open(__output_html, 'a') as body:
             body.write(result)
-    except Exception, e:
+    except (Exception) as err:
         print(e)
 
 
@@ -133,8 +132,6 @@ def main():
     __aws_resource = None
     __json_uid = None
     try:
-        if len(sys.argv) > 1:
-            help_menu()
         json_output = sys.stdin.read()
         aws_dict = json.loads(json_output)
         if 'Reservations' in aws_dict.keys():
@@ -156,12 +153,12 @@ def main():
                         build_ec2(aws_resource=dict_obj)
                     if __aws_resource is RDS:
                         build_rds(aws_resource=dict_obj)
-                except Exception, e:
-                    print(e)
+                except (Exception) as err:
+                    print(err)
         header_footer(source_type='footer')
         webbrowser.open('file://' + os.path.realpath(__output_html))
-    except Exception, e:
-        print('Incorrect Output Used - %s' % e)
+    except (Exception) as err:
+        print('Incorrect Output Used - %s' % err)
 
 
 def main_test():
