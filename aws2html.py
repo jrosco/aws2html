@@ -16,15 +16,17 @@ from string import Template
 import webbrowser
 import ConfigParser
 import urllib
+from os.path import expanduser
 
 #AWS resource types
 EC2 = 'EC2'
 RDS = 'RDS'
 ELB = 'ELB'
 
-__html_template = 'templates/aws_template.html'
-__html_header = 'templates/header.html'
-__html_footer = 'templates/footer.html'
+__user_home = expanduser("~")
+__html_template = __user_home + '.aws2html/aws_template.html'
+__html_header = __user_home + '.aws2html/header.html'
+__html_footer = __user_home + '.aws2html/footer.html'
 __output_html = tempfile.mkstemp(dir='/tmp/', prefix='AWS-HTML-', suffix='.html')[1]
 
 try:
