@@ -8,7 +8,7 @@ Use the aws-cli and pipe output to this script and it will convert the json outp
 
 ##Install:
 
-####Pull lasest repository
+####Pull latest repository
 
 ```
 git clone https://github.com/jrosco/aws2html.git
