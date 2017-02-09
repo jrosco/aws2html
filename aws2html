@@ -96,7 +96,7 @@ def template_engine(ec2_obj=object, rds_obj=object):
         with open(__output_html, 'a') as body:
             body.write(result)
     except (Exception) as err:
-        print(e)
+        print(err)
 
 
 # Create a html table for tags
